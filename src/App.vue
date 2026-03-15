@@ -1,11 +1,24 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { subscribeNews, createNews, editNews, deleteNews } from './firebase'
 
 const showInput = ref(false)
 const newText = ref('')
 const news = ref([])
 const editId = ref(null)
 const editText = ref('')
+
+let unsubscribe = null
+
+onMounted(() => {
+  unsubscribe = subscribeNews((items) => {
+    news.value = items
+  })
+})
+
+onUnmounted(() => {
+  if (typeof unsubscribe === 'function') unsubscribe()
+})
 
 function toggleInput() {
   showInput.value = !showInput.value
@@ -15,9 +28,10 @@ function toggleInput() {
 function addNews() {
   const text = newText.value.trim()
   if (!text) return
-  news.value.unshift({ id: Date.now(), text })
-  newText.value = ''
-  showInput.value = false
+  createNews(text).then(() => {
+    newText.value = ''
+    showInput.value = false
+  })
 }
 
 function cancel() {
@@ -33,10 +47,10 @@ function startEdit(item) {
 function saveEdit() {
   const text = editText.value.trim()
   if (!text) return
-  const idx = news.value.findIndex(n => n.id === editId.value)
-  if (idx !== -1) news.value[idx].text = text
-  editId.value = null
-  editText.value = ''
+  editNews(editId.value, text).then(() => {
+    editId.value = null
+    editText.value = ''
+  })
 }
 
 function cancelEdit() {
@@ -44,8 +58,8 @@ function cancelEdit() {
   editText.value = ''
 }
 
-function deleteNews(id) {
-  news.value = news.value.filter(n => n.id !== id)
+function deleteNewsLocal(id) {
+  deleteNews(id)
 }
 </script>
 
