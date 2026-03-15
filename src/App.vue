@@ -61,6 +61,11 @@ function cancelEdit() {
 function deleteNewsLocal(id) {
   deleteNews(id)
 }
+
+function deleteNewsConfirm(id) {
+  if (!confirm('Confirma exclusão desta notícia?')) return
+  deleteNews(id)
+}
 </script>
 
 <template>
@@ -97,8 +102,22 @@ function deleteNewsLocal(id) {
               <button class="cancel" @click="cancelEdit">Cancelar</button>
             </template>
             <template v-else>
-              <button class="icon-btn" title="Editar" @click="startEdit(item)">✏️</button>
-              <button class="icon-btn" title="Excluir" @click="deleteNews(item.id)">🗑️</button>
+              <button class="icon-btn" title="Editar" @click="startEdit(item)" aria-label="Editar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="#495057"/>
+                  <path d="M20.71 7.04a1.003 1.003 0 0 0 0-1.41l-2.34-2.34a1.003 1.003 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="#495057"/>
+                </svg>
+                <span class="control-label">Editar</span>
+              </button>
+              <button class="icon-btn delete" title="Excluir" @click="deleteNewsConfirm(item.id)" aria-label="Excluir">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M6 7h12v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7z" fill="#d32f2f"/>
+                  <path d="M9 4h6v2H9z" fill="#d32f2f"/>
+                  <path d="M10 11v6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M14 11v6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="control-label">Excluir</span>
+              </button>
             </template>
           </div>
         </div>
@@ -144,7 +163,7 @@ function deleteNewsLocal(id) {
   height: 48px;
   border-radius: 50%;
   border: none;
-  background: #d32f2f;
+    background: #2e7d32;
   color: white;
   font-size: 28px;
   font-weight: 300;
@@ -157,7 +176,7 @@ function deleteNewsLocal(id) {
 }
 
 .add-btn:hover {
-  background: #b71c1c;
+  background: #1b5e20;
   transform: scale(1.05);
 }
 
@@ -293,6 +312,23 @@ function deleteNewsLocal(id) {
   transition: all 0.2s;
 }
 
+.icon-btn svg {
+  display: block;
+}
+.icon-btn .control-label {
+  display: none;
+  font-size: 12px;
+  color: #495057;
+  margin-top: 6px;
+}
+.icon-btn.delete {
+  background: #fff5f5;
+  border-color: #ffe6e6;
+}
+.icon-btn.delete:hover {
+  background: #ffeaea;
+}
+
 .icon-btn:hover {
   background: #e9ecef;
   color: #212529;
@@ -311,6 +347,95 @@ function deleteNewsLocal(id) {
   font-size: 18px;
   padding: 40px;
   font-style: italic;
+}
+
+/* Responsive improvements */
+@media (max-width: 900px) {
+  .app {
+    margin: 24px 12px;
+    padding: 20px;
+  }
+  .header h1 {
+    font-size: 26px;
+  }
+  .cards {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+  }
+}
+
+@media (max-width: 600px) {
+  .app {
+    margin: 12px;
+    padding: 16px;
+    border-radius: 10px;
+    align-self: center;
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .header h1 {
+    font-size: 26px;
+    line-height: 1.05;
+  }
+  .add-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 24px;
+  }
+  .input-area {
+    padding: 16px;
+  }
+  .input-area textarea {
+    padding: 12px;
+    font-size: 15px;
+  }
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .card {
+    padding: 18px;
+  }
+  .card-body {
+    flex-direction: column;
+  }
+  .controls {
+    flex-direction: row;
+    gap: 8px;
+    margin-top: 12px;
+    align-self: flex-end;
+  }
+  .icon-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    font-size: 18px;
+    padding: 6px;
+    flex-direction: column;
+  }
+  .icon-btn .control-label {
+    display: block;
+    font-size: 12px;
+    margin-top: 6px;
+  }
+}
+
+@media (max-width: 420px) {
+  .header h1 {
+    font-size: 20px;
+    line-height: 1.08;
+  }
+  .save, .cancel {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+  .empty {
+    padding: 28px;
+    font-size: 16px;
+  }
 }
 </style>
 
