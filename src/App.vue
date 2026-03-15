@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { subscribeNews, createNews, editNews, deleteNews } from './firebase'
 
 const showInput = ref(false)
@@ -10,6 +10,7 @@ const editText = ref('')
 const confirmDeleteId = ref(null)
 const confirmDeleteText = ref('')
 const showProfanityModal = ref(false)
+const expanded = reactive({})
 
 const profanityList = [
   'porra', 'caralho', 'cu', 'buceta', 'pika', 'puta que pariu', 'pqp', 'rola', 'foda'
@@ -71,6 +72,15 @@ function saveEdit() {
   })
 }
 
+function toggleExpand(id) {
+  expanded[id] = !expanded[id]
+}
+
+function isLong(text) {
+  if (!text) return false
+  return text.length > 300
+}
+
 function cancelEdit() {
   editId.value = null
   editText.value = ''
@@ -124,7 +134,10 @@ function closeProfanityModal() {
               <textarea v-model="editText" rows="4"></textarea>
             </div>
             <div v-else>
-              <p>{{ item.text }}</p>
+              <p :class="{ clamped: !expanded[item.id] && isLong(item.text) }">{{ item.text }}</p>
+              <div v-if="isLong(item.text)" class="more">
+                <button class="show-more" @click="toggleExpand(item.id)">{{ expanded[item.id] ? 'Mostrar menos' : 'Mostrar mais' }}</button>
+              </div>
             </div>
           </div>
 
@@ -344,6 +357,32 @@ function closeProfanityModal() {
   line-height: 1.6;
   color: #343a40;
   white-space: pre-wrap;
+  /* allow breaking long words to avoid overflow */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.clamped {
+  /* limit to ~6 lines while preserving line breaks */
+  max-height: calc(1.6em * 6);
+  overflow: hidden;
+  /* ensure long words are wrapped inside the clamped area */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.more {
+  margin-top: 8px;
+}
+.show-more {
+  background: transparent;
+  border: none;
+  color: #0d6efd;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 4px 6px;
+}
+.show-more:hover {
+  text-decoration: underline;
 }
 
 .controls {
