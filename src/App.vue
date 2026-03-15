@@ -7,6 +7,20 @@ const newText = ref('')
 const news = ref([])
 const editId = ref(null)
 const editText = ref('')
+const confirmDeleteId = ref(null)
+const confirmDeleteText = ref('')
+const showProfanityModal = ref(false)
+
+const profanityList = [
+  'porra', 'caralho', 'cu', 'buceta', 'pika', 'puta que pariu', 'pqp', 'rola', 'foda'
+]
+const profanityRegex = new RegExp(
+  profanityList
+    .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .map(w => `\\b${w}\\b`)
+    .join('|'),
+  'i'
+)
 
 let unsubscribe = null
 
@@ -28,6 +42,10 @@ function toggleInput() {
 function addNews() {
   const text = newText.value.trim()
   if (!text) return
+  if (profanityRegex.test(text)) {
+    showProfanityModal.value = true
+    return
+  }
   createNews(text).then(() => {
     newText.value = ''
     showInput.value = false
@@ -58,14 +76,28 @@ function cancelEdit() {
   editText.value = ''
 }
 
-function deleteNewsLocal(id) {
-  deleteNews(id)
+function openDeleteModal(item) {
+  confirmDeleteId.value = item.id
+  confirmDeleteText.value = item.text
 }
 
-function deleteNewsConfirm(id) {
-  if (!confirm('Confirma exclusão desta notícia?')) return
-  deleteNews(id)
+function closeDeleteModal() {
+  confirmDeleteId.value = null
+  confirmDeleteText.value = ''
 }
+
+function confirmDelete() {
+  if (!confirmDeleteId.value) return
+  deleteNews(confirmDeleteId.value).then(() => {
+    closeDeleteModal()
+  })
+}
+
+function closeProfanityModal() {
+  showProfanityModal.value = false
+}
+
+// Direct deletion handled by calling `deleteNews(id)` from the template
 </script>
 
 <template>
@@ -109,7 +141,7 @@ function deleteNewsConfirm(id) {
                 </svg>
                 <span class="control-label">Editar</span>
               </button>
-              <button class="icon-btn delete" title="Excluir" @click="deleteNewsConfirm(item.id)" aria-label="Excluir">
+              <button class="icon-btn delete" title="Excluir" @click="openDeleteModal(item)" aria-label="Excluir">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                   <path d="M6 7h12v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7z" fill="#d32f2f"/>
                   <path d="M9 4h6v2H9z" fill="#d32f2f"/>
@@ -123,6 +155,30 @@ function deleteNewsConfirm(id) {
         </div>
       </div>
     </section>
+
+    <!-- Delete confirmation modal -->
+    <div v-if="confirmDeleteId" class="modal-overlay">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <h3 id="modal-title">Confirma exclusão?</h3>
+        <p class="modal-text">Tem certeza que deseja excluir esta notícia?</p>
+        <blockquote class="modal-quote">{{ confirmDeleteText }}</blockquote>
+        <div class="modal-actions">
+          <button class="cancel" @click="closeDeleteModal">Cancelar</button>
+          <button class="save" @click="confirmDelete">Excluir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profanity warning modal -->
+    <div v-if="showProfanityModal" class="modal-overlay">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="profanity-title">
+        <h3 id="profanity-title">Pode não man</h3>
+        <p class="modal-text">O texto contém palavras não permitidas e não foi salvo.</p>
+        <div class="modal-actions">
+          <button class="save" @click="closeProfanityModal">OK</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -347,6 +403,61 @@ function deleteNewsConfirm(id) {
   font-size: 18px;
   padding: 40px;
   font-style: italic;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.35);
+  z-index: 1200;
+}
+.modal {
+  width: 92%;
+  max-width: 420px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+}
+.modal h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+}
+.modal-text {
+  margin: 0 0 12px 0;
+  color: #495057;
+}
+.modal-quote {
+  margin: 0 0 16px 0;
+  padding: 10px 12px;
+  background: #f8f9fa;
+  border-left: 3px solid #e9ecef;
+  color: #343a40;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.modal .cancel {
+  background: transparent;
+  border: 1px solid #ced4da;
+  color: #495057;
+}
+.modal .save {
+  background: #d32f2f;
+  color: white;
+}
+
+/* Profanity modal uses same modal styles; make OK button neutral */
+.modal .save:focus {
+  outline: none;
 }
 
 /* Responsive improvements */
